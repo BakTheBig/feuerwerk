@@ -207,6 +207,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.sticky_with_boss = False
         if "mass" not in kwargs:
             self.mass = 15
+        if "friction" not in kwargs:
+            self.friction = None
         # ---
         self.age = 0 # in seconds
         self.distance_traveled = 0 # in pixel
@@ -268,6 +270,8 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos = v.Vec2d(boss.pos.x, boss.pos.y)
             
         self.pos += self.move * seconds
+        if self.friction is not None:
+            self.move *= self.friction #friction from 1.0 to 0.1
         self.distance_traveled += self.move.length * seconds
         self.age += seconds
   
@@ -350,9 +354,10 @@ class Ball(VectorSprite):
         self.image = pygame.Surface((self.width,self.height))    
         # pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
         pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
-        pygame.draw.circle (self.image, (0,0,200) , (self.radius //2 , self.radius //2), self.radius// 3)         # left blue eye
-        pygame.draw.circle (self.image, (255,255,0) , (3 * self.radius //2  , self.radius //2), self.radius// 3)  # right yellow yey
-        pygame.draw.arc(self.image, (32,32,32), (self.radius //2, self.radius, self.radius, self.radius//2), math.pi, 2*math.pi, 1) # grey mouth
+        if self.radius > 40:
+            pygame.draw.circle (self.image, (0,0,200) , (self.radius //2 , self.radius //2), self.radius// 3)         # left blue eye
+            pygame.draw.circle (self.image, (255,255,0) , (3 * self.radius //2  , self.radius //2), self.radius// 3)  # right yellow yey
+            pygame.draw.arc(self.image, (32,32,32), (self.radius //2, self.radius, self.radius, self.radius//2), math.pi, 2*math.pi, 1) # grey mouth
         # self.surface = self.surface.convert() # for faster blitting if no transparency is used. 
         # to avoid the black background, make black the transparent color:
         self.image.set_colorkey((0,0,0))
@@ -415,9 +420,9 @@ class PygView(object):
         VectorSprite.groups = self.allgroup
         #Hitpointbar.groups = self.allgroup
         
-        self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(-20,-5), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass = 1000) # creating a Ball Sprite
+        self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass = 1000) # creating a Ball Sprite
         self.cannon1 = Cannon(bossnumber = self.ball1.number)
-        self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(120,50), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass = 1000)
+        self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass = 1000)
         
         #self.ball2 = Ball(x=200, y=100) # create another Ball Sprite
 
@@ -436,7 +441,7 @@ class PygView(object):
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_b:
-                        Ball(pos=v.Vec2d(100,100), move=v.Vec2d(22,4)) # add big balls!
+                        Ball(pos=v.Vec2d(700,400), move=v.Vec2d(0,0), radius = 20, friction = 0.995, bounce_on_edge = True) # add small balls!
                     if event.key == pygame.K_c:
                         m = v.Vec2d(60,0) # lenght of cannon
                         #m.rotate(self.cannon1.angle)
