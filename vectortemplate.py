@@ -158,8 +158,9 @@ class VectorSprite(pygame.sprite.Sprite):
         # get unlimited named arguments and turn them into attributes
         self.upkey = None
         self.downkey = None
-        self.leftkey = None
         self.rightkey = None
+        self.leftkey = None
+        
         for key, arg in kwargs.items():
             #print(key, arg)
             setattr(self, key, arg)
@@ -167,7 +168,7 @@ class VectorSprite(pygame.sprite.Sprite):
         #if "pos" not in kwarts
         #pos=v.Vec2d(50,50), move=v.Vec2d(0,0), radius = 50, color=None, 
         #         , hitpoints=100, mass=10, damage=10, bounce_on_edge=True, angle=0
-        
+    
         if "pos" not in kwargs:
             self.pos = v.Vec2d(50,50)
         if "move" not in kwargs:
@@ -184,7 +185,7 @@ class VectorSprite(pygame.sprite.Sprite):
             self.hitpoints = 100
         self.hitpointsfull = self.hitpoints # makes a copy
         if "mass" not in kwargs:
-            self.mass = 10
+            self.mass = 10000
         if "damage" not in kwargs:
             self.damage = 10
         if "bounce_on_edge" not in kwargs:
@@ -248,7 +249,18 @@ class VectorSprite(pygame.sprite.Sprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = oldcenter
-        print("rotated!")
+        #print("rotated by !")
+        
+    def set_angle(self, degree):
+        """rotates a sprite and changes it's angle to degree"""
+        self.angle = degree
+        oldcenter = self.rect.center
+        self.image = pygame.transform.rotate(self.image0, self.angle)
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = oldcenter
+        print("rotated to !")
+        
         
     def update(self, seconds):
         """calculate movement, position and bouncing on edge"""
@@ -271,7 +283,7 @@ class VectorSprite(pygame.sprite.Sprite):
             
         self.pos += self.move * seconds
         if self.friction is not None:
-            self.move *= self.friction #friction from 1.0 to 0.1
+            self.move *= self.friction # friction between 1.0 and 0.1
         self.distance_traveled += self.move.length * seconds
         self.age += seconds
   
@@ -329,32 +341,34 @@ class Ball(VectorSprite):
                 
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
-
-        #checked = False
         #Hitpointbar(self.number)
+        print("updkey", self.upkey)
         
-    def update(self,seconds):
+    def update(self, seconds):
         VectorSprite.update(self, seconds)
         pressedkeys = pygame.key.get_pressed()
         if self.upkey is not None:
             if pressedkeys[self.upkey]:
-                self.move.y -= 8
+                self.move.y -= 5
         if self.downkey is not None:
             if pressedkeys[self.downkey]:
-                self.move.y += 8
+                self.move.y += 5
         if self.leftkey is not None:
             if pressedkeys[self.leftkey]:
-                self.move.x -= 8
+                self.move.x -= 5
         if self.rightkey is not None:
             if pressedkeys[self.rightkey]:
-                self.move.x += 8
-        
+                self.move.x += 5
+                
+            
+    
     def create_image(self):
         # create a rectangular surface for the ball 50x50
         self.image = pygame.Surface((self.width,self.height))    
         # pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
         pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
         if self.radius > 40:
+            # paint a face
             pygame.draw.circle (self.image, (0,0,200) , (self.radius //2 , self.radius //2), self.radius// 3)         # left blue eye
             pygame.draw.circle (self.image, (255,255,0) , (3 * self.radius //2  , self.radius //2), self.radius// 3)  # right yellow yey
             pygame.draw.arc(self.image, (32,32,32), (self.radius //2, self.radius, self.radius, self.radius//2), math.pi, 2*math.pi, 1) # grey mouth
@@ -393,7 +407,6 @@ class PygView(object):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
-        pygame.display.set_caption("Press ESC to quit")
         PygView.width = width    # make global readable
         PygView.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
@@ -420,10 +433,14 @@ class PygView(object):
         VectorSprite.groups = self.allgroup
         #Hitpointbar.groups = self.allgroup
         
-        self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass = 1000) # creating a Ball Sprite
+        self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=0.0000001) # creating a Ball Sprite
         self.cannon1 = Cannon(bossnumber = self.ball1.number)
-        self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass = 1000)
-        
+        self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333)
+        self.cannon2 = Cannon(bossnumber = self.ball2.number)
+        self.ball3 = Ball(pos=v.Vec2d(200,450), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_i, downkey=pygame.K_l, leftkey=pygame.K_j, rightkey=pygame.K_l, mass=0.000001)
+        self.cannon3 = Cannon(bossnumber = self.ball3.number)
+        self.ball4 = Ball(pos=v.Vec2d(800,150), move=v.Vec2d(0,0), bounce_on_edge=True, mass=333)
+        self.cannon4 = Cannon(bossnumber = self.ball4.number)
         #self.ball2 = Ball(x=200, y=100) # create another Ball Sprite
 
         #VectorSprite(horst=14, jens="abc")
@@ -441,20 +458,131 @@ class PygView(object):
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_b:
-                        Ball(pos=v.Vec2d(700,400), move=v.Vec2d(0,0), radius = 20, friction = 0.995, bounce_on_edge = True) # add small balls!
+                        Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.995, bounce_on_edge=True) # add small balls!
                     if event.key == pygame.K_c:
                         m = v.Vec2d(60,0) # lenght of cannon
+                        m = m.rotated(-self.cannon1.angle)
+                        p = v.Vec2d(self.ball1.pos.x, self.ball1.pos.y) + m
+                        #print(p, m)
+                        Ball(pos=p, move=m.normalized()*15 + self.ball1.move, radius=10, color = (0,0,1)) # move=v.Vec2d(0,0), 
+                        #knockbackeffect
+                        self.ball1.move += m.normalized()* -15
                         #m.rotate(self.cannon1.angle)
-                        Bullet(bossnumber = self.ball1.number, move=m, kill_on_edge = True)
+                        #Bullet(bossnumber = self.ball1.number, move=m, kill_on_edge = True)
                     if event.key == pygame.K_LEFT:
                         self.ball1.rotate(1) # 
                         print(self.ball1.angle)
+                    if event.key == pygame.K_h:
+                        m = v.Vec2d(60,0) # lenght of cannon
+                        m = m.rotated(-self.cannon3.angle)
+                        p = v.Vec2d(self.ball3.pos.x, self.ball3.pos.y) + m
+                        #print(p, m)
+                        Ball(pos=p, move=m.normalized()*15 + self.ball3.move, radius=10, color = (0,0,1)) # move=v.Vec2d(0,0), 
+                        #knockbackeffect
+                        self.ball3.move += m.normalized()* -15
+                        m = v.Vec2d(60,0) # lenght of cannon
+                        m = m.rotated(-self.cannon3.angle)
+                        p = v.Vec2d(self.ball3.pos.x, self.ball3.pos.y) + m
+                        #print(p, m)
+                        Ball(pos=p, move=m.normalized()*15 + self.ball3.move, radius=10, color = (0,0,0)) # move=v.Vec2d(0,0), 
+                        #knockbackeffect
+                        self.ball3.move += m.normalized()* -15
+                    #if event.key == pygame.K_m:
+                     #   m = v.Vec2d(60,0) # lenght of cannon
+                      #  m = m.rotated(-self.cannon2.angle)
+                      #  p = v.Vec2d(self.ball2.pos.x, self.ball2.pos.y) + m
+                      #  #print(p, m)
+                      #  Ball(pos=p, move=m.normalized()*2000 + self.ball2.move, radius=10) # move=v.Vec2d(0,0), 
+                      #  #knockbackeffect
+                      #  self.ball3.move += m.normalized()* -15
+                       # m = v.Vec2d(60,0) # lenght of cannon
+                      #  m = m.rotated(-self.cannon2.angle)
+                       # p = v.Vec2d(self.ball2.pos.x, self.ball2.pos.y) + m
+                        #print(p, m)
+                       # Ball(pos=p, move=m.normalized()*2000 + self.ball2.move, radius=10) # move=v.Vec2d(0,0), 
+                        #knockbackeffect
+                       # self.ball2.move += m.normalized()* -15
+                    #if event.key == pygame.K_q:
+                        #   m = v.Vec2d(60,0) # lenght of cannon
+                        #  m = m.rotated(-self.cannon4.angle)
+                        # p = v.Vec2d(self.ball4.pos.x, self.ball4.pos.y) + m
+                        #print(p, m)
+                        # Ball(pos=p, move=m.normalized()*1000 + self.ball4.move, radius=10) # move=v.Vec2d(0,0), 
+                        #knockbackeffect
+                        # self.ball4.move += m.normalized()* -15
+                        # m = v.Vec2d(60,0) # lenght of cannon
+                        # m = m.rotated(-self.cannon4.angle)
+                        # p = v.Vec2d(self.ball4.pos.x, self.ball4.pos.y) + m
+                        # #print(p, m)
+                        # Ball(pos=p, move=m.normalized()*2000 + self.ball4.move, radius=10) # move=v.Vec2d(0,0), 
+                        # #knockbackeffect
+                       # self.ball4.move += m.normalized()* -15
+
+                    #if event.key == pygame.K_t:
+                    #    a = v.Vec2d(100,100)
+                    #    b = v.Vec2d(100, 200)
+                    #    print("a: {}, b:{}, Winkel: {}".format(a,b, v.Vec2d.get_angle(b-a)))
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             if pressed_keys[pygame.K_y]:
-                self.cannon1.rotate(1)
+                self.cannon1.rotate(100)
             if pressed_keys[pygame.K_x]:
-                self.cannon1.rotate(-1)
+                self.cannon1.rotate(-100)
+            if pressed_keys[pygame.K_u]:
+                self.cannon3.rotate(100)
+            if pressed_keys[pygame.K_z]:
+                self.cannon3.rotate(-100)
+                                           
+                                           
+            # --- auto aim cannon2 at ball1 ----
+            vectordiff = self.ball2.pos - self.ball1.pos
+            self.cannon2.set_angle(-vectordiff.get_angle()-180)
+            
+            # --- auto aim cannon4 at ball3 ----
+            vectordiff = self.ball4.pos - self.ball3.pos
+            self.cannon4.set_angle(-vectordiff.get_angle()-180)
+            
+            # - - - - - - - autoshooting - - - - - - -
+            if random.random() < 0.002:
+                m = v.Vec2d(60,0) # lenght of cannon
+                m = m.rotated(-self.cannon4.angle)
+                p = v.Vec2d(self.ball4.pos.x, self.ball4.pos.y) + m
+                #print(p, m)
+                Ball(pos=p, move=m.normalized()*0.001 + self.ball4.move, radius=10) # move=v.Vec2d(0,0), 
+                #knockbackeffect
+                self.ball3.move += m.normalized()* -1
+                m = v.Vec2d(60,0) # lenght of cannon
+                m = m.rotated(-self.cannon4.angle)
+                p = v.Vec2d(self.ball4.pos.x, self.ball4.pos.y) + m
+                #print(p, m)
+                Ball(pos=p, move=m.normalized()*0.0001 + self.ball4.move, radius=10) # move=v.Vec2d(0,0), 
+                #knockbackeffect
+                self.ball4.move += m.normalized()* -1
+            
+            if random.random() < 0.002:
+                m = v.Vec2d(60,0) # lenght of cannon
+                m = m.rotated(-self.cannon2.angle)
+                p = v.Vec2d(self.ball2.pos.x, self.ball2.pos.y) + m
+                #print(p, m)
+                Ball(pos=p, move=m.normalized()*0.0001 + self.ball2.move, radius=10) # move=v.Vec2d(0,0), 
+                #knockbackeffect
+                self.ball2.move += m.normalized()* -1
+                m = v.Vec2d(60,0) # lenght of cannon
+                m = m.rotated(-self.cannon2.angle)
+                p = v.Vec2d(self.ball2.pos.x, self.ball2.pos.y) + m
+                #print(p, m)
+                Ball(pos=p, move=m.normalized()* 1 + self.ball2.move, radius=10) # move=v.Vec2d(0,0), 
+                #knockbackeffect
+                self.ball2.move += m.normalized()* -15
+                
+            # - - - - - - - - - - - - - auto beaming ball2 - - - - - - - - - - - - - - - - - -
+            if random.random() < 0.009:
+                xx = random.randint(0, PygView.width)
+                yy = random.randint(0 , PygView.height)
+                self.ball2.pos = v.Vec2d(xx,yy)
+                    
+                    
+
                                                 
                     
                     
@@ -500,10 +628,15 @@ class PygView(object):
             #write(self.screen, "Press c to add another bullet", x=self.width//2, y=350, center=True)
             # next frame
             pygame.display.flip()
+            pygame.display.set_caption("Press ESC to quit. Cannon angle: {}".format(self.cannon1.angle))
+            #a = v.Vec2d(self.ball1.pos.x, self.ball1.pos.y)
+            #b = v.Vec2d(self.ball2.pos.x, self.ball2.pos.y)
+            #print("winkel:1:{} 2:{}  winkel:{}".format(a,b, v.Vec2d.get_angle_between(a,b)))
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1400,800).run() # try PygView(800,600).run()
+    PygView(1450, 850).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
     #menu1.PygView.run()
+
 
